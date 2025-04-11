@@ -1,9 +1,12 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.chains import RetrievalQA
-from langchain.llms import OpenAI
+from langchain.llms import OpenAI  # Uncommented this import
+import os
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
+# Initialize the OpenAI LLM with the API key
+llm = OpenAI(openai_api_key=openai_api_key)
 # Global embedding & LLM setup
 embedding_model = OpenAIEmbeddings()
 llm = OpenAI()
