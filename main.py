@@ -1,14 +1,13 @@
-from rag_engine import rag
+from rag_engine import RAG_Engine
 
 def main():
-    # Initialize the RAG engine
-    qa = rag()
-
-    # Example query
-    query = input("Enter your question: ")
     
+
+    query = input("Enter your question: ")
+    answer = RAG_Engine(query)
+
     # Get the answer
-    answer = qa(query)
+
     
     # Print the answer
     print("Answer:", answer)

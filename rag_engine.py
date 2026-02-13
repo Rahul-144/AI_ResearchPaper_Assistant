@@ -1,51 +1,47 @@
-from parser import load_pdf
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_openai import ChatOpenAI
+from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
+from Faiss_index import faiss_index
+import os
+from  dotenv import load_dotenv
+load_dotenv()
+def RAG_Engine(query):
+    # Step 1: Create the FAISS index
+    vectorstore = faiss_index()
+    
+    # Step 2: Retrieve relevant chunks based on the query
+    relevant_chunks = vectorstore.similarity_search(query, k=5)
+    
+    # Step 3: Generate an answer using the retrieved chunks
+    llm = ChatOpenAI(
+    openai_api_base="https://api.groq.com/openai/v1",
+    openai_api_key=os.environ.get("OPEN_API_KEY"),
+    model_name="qwen/qwen3-32b" # Valid Groq model'
+   
+)
+    
+    prompt_template = """
+    You are a helpful assistant. Use the following retrieved information to answer the question:
+    
+    Retrieved Information:
+    {retrieved_info}
+    
+    Question:
+    {question}
+    
+    Answer:
+    Rules:
+- Use only the retrieved information to answer the question.
+- If the retrieved information does not contain the answer, say "I don't know."
 
-from langchain.chains import RetrievalQA
-from langchain_openai import OpenAI
-from langchain_community.vectorstores import FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
-from langchain_community.llms import HuggingFacePipeline
-
-# import os
-# import getpass
-
-# # Set OpenAI key (only needed if using OpenAI LLM)
-# if not os.getenv("OPENAI_API_KEY"):
-#     os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
-
-# Step 1: Load PDF and Extract Text
-def rag():
-    text = load_pdf("/Users/rahulbiju/Downloads/241213769v1_250306_120359.pdf")
-    text = "\n".join(text)
-
-    # Step 2: Chunking
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    texts = text_splitter.split_text(text)
-
-    # Step 3: Embeddings (Local)
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
-    # Step 4: Create Vector DB
-    vectorstore = FAISS.from_texts(texts, embeddings)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-
-    model_id = "google/flan-t5-base"  # You can also use "google/flan-t5-base" for CPU
-
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_id, device_map="auto")  # Will use GPU if available
-
-    pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer, max_new_tokens=512)
-
-    llm = HuggingFacePipeline(pipeline=pipe) 
-
-    # Step 6: QA Chain
-    qa = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever,
-        return_source_documents=False,
-        chain_type_kwargs={"verbose": False}  
-    )
-    return qa
+    """
+    
+    prompt = PromptTemplate.from_template(prompt_template)
+    
+    chain = LLMChain(llm=llm, prompt=prompt)
+    
+    retrieved_info = "\n".join([chunk.page_content for chunk in relevant_chunks])
+    
+    answer = chain.run(retrieved_info=retrieved_info, question=query)
+    
+    return answer
