@@ -1,16 +1,29 @@
 from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
+from langchain_classic.chains import LLMChain
 from langchain_core.prompts import PromptTemplate
 from Faiss_index import faiss_index
 import os
 from  dotenv import load_dotenv
+from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+from langchain_classic.retrievers import ContextualCompressionRetriever
+from langchain_core.output_parsers import StrOutputParser
+model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
+compressor = CrossEncoderReranker(model=model, top_n=3)
+
 load_dotenv()
 def RAG_Engine(query):
     # Step 1: Create the FAISS index
     vectorstore = faiss_index()
-    
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+    compression_retriever = ContextualCompressionRetriever(
+        base_compressor=compressor, base_retriever=retriever
+    )
+
+    relevant_chunks= compression_retriever.invoke(query)
+
     # Step 2: Retrieve relevant chunks based on the query
-    relevant_chunks = vectorstore.similarity_search(query, k=5)
+    # relevant_chunks = vectorstore.similarity_search(query, k=5)
     
     # Step 3: Generate an answer using the retrieved chunks
     llm = ChatOpenAI(
@@ -37,11 +50,16 @@ def RAG_Engine(query):
     """
     
     prompt = PromptTemplate.from_template(prompt_template)
-    
-    chain = LLMChain(llm=llm, prompt=prompt)
-    
+    chain = prompt | llm | StrOutputParser()
+
+    # 2. Prepare your context (retrieved_info)
     retrieved_info = "\n".join([chunk.page_content for chunk in relevant_chunks])
-    
-    answer = chain.run(retrieved_info=retrieved_info, question=query)
-    
+
+    # 3. Execute the chain once with all variables
+    # Use .invoke() instead of .run() (which is deprecated)
+    answer = chain.invoke({
+        "retrieved_info": retrieved_info, 
+        "question": query
+    })
+
     return answer

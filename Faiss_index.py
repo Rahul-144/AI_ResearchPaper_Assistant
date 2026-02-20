@@ -1,12 +1,12 @@
 from parser import load_pdf
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import CacheBackedEmbeddings
-from langchain.storage import InMemoryByteStore
+from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
+from langchain_classic.embeddings import CacheBackedEmbeddings
+from langchain_classic.storage import InMemoryByteStore
 import os
 
-text = load_pdf("/Users/rahulbiju/Downloads/241213769v1_250306_120359.pdf")
+text = load_pdf("/Users/rahulbiju/Downloads/TrafficFlowGAN_.pdf")
 text = "\n".join(text)
 
 # Step 2: Chunking
@@ -34,7 +34,7 @@ def faiss_index():
         
     )
     
-    vectorstore.index.nprobe = 10
+    # vectorstore.index.nprobe = 10
     
     # Do NOT call .save_local() here
     return vectorstore
