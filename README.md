@@ -23,13 +23,20 @@ AI_ResearchPaper_Assistant/
 
 ### Python dependencies
 
-The following packages are used (install via `pip`):
+All required packages are listed in `requirements.txt`. Install them via:
 
-```
-pip install streamlit langchain langchain-classic langchain-community langchain-openai langchain-huggingface langchain-heck at*  # etc
+```bash
+pip install -r requirements.txt
 ```
 
-**Note:** The repository originally used `langchain_classic` and `langchain_community`, make sure these modules are available. You may also need FAISS (`faiss-cpu`) and any embedding or transformer packages used in `Faiss_index.py`.
+**Key packages:**
+- `streamlit` – web UI framework
+- `langchain`, `langchain-community`, `langchain-huggingface`, `langchain-openai` – LLM orchestration
+- `faiss-cpu` – semantic search index
+- `PyMuPDF` – PDF text extraction
+- `sentence-transformers` – embeddings
+- `python-dotenv` – environment variable management
+- `pandas` – data manipulation
 
 Using the included `env` directory is one fast way to ensure the correct environment; activate it with:
 
@@ -44,11 +51,10 @@ source env/bin/activate
    source env/bin/activate
    ```
 
-2. **Install any missing dependencies** (if not using the pre-built env):
+2. **Install dependencies** (if starting fresh without the pre-built env):
    ```bash
    pip install -r requirements.txt
    ```
-   *You may need to create this file yourself based on imports.*
 
 3. **Start the Streamlit UI**:
    ```bash
@@ -116,7 +122,7 @@ source env/bin/activate
 
 This project is designed for local use and exploration. If you wish to package it:
 
-1. Ensure all dependencies are listed.
+1. Dependencies are already listed in `requirements.txt` – simply run `pip install -r requirements.txt` for any new environment.
 2. Optionally containerize with Docker for portability.
 3. Provide instructions for setting up API keys (e.g., Groq or OpenAI) in `.env`.
 
